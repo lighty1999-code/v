@@ -48,6 +48,7 @@
                         'wiggle': 'wiggle 1s ease-in-out infinite',
                         'spin-slow': 'spin 8s linear infinite',
                         'fade-in-up': 'fadeInUp 1s ease-out forwards',
+                        'blob': 'blob 7s infinite',
                     },
                     keyframes: {
                         float: {
@@ -61,6 +62,12 @@
                         fadeInUp: {
                             '0%': { opacity: '0', transform: 'translateY(20px)' },
                             '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
                         }
                     }
                 }
@@ -349,12 +356,12 @@
 <body class="text-gray-800 antialiased selection:bg-pink-200 selection:text-pink-900">
 
     <!-- AUDIO ASSETS -->
-    <audio id="song1" src="song1.mp3" preload="auto" loop></audio>
-    <audio id="song2" src="song2.mp3" preload="auto" loop></audio>
-    <audio id="song3" src="song3.mp3" preload="auto" loop></audio>
-    <audio id="song4" src="song4.mp3" preload="auto" loop></audio>
-    <!-- Song 5 for Letter Section -->
-    <audio id="song5" src="song5.mp3" preload="auto" loop></audio>
+    <!-- Removed preload="auto" to let JS handle loading for better autoplay control -->
+    <audio id="song1" src="song1.mp3" loop></audio>
+    <audio id="song2" src="song2.mp3" loop></audio>
+    <audio id="song3" src="song3.mp3" loop></audio>
+    <audio id="song4" src="song4.mp3" loop></audio>
+    <audio id="song5" src="song5.mp3" loop></audio>
 
     <!-- FLOATING HEARTS BACKGROUND -->
     <div id="floating-hearts-container"></div>
@@ -751,14 +758,12 @@
         /* --- Initialization --- */
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            initAudio();
+            initAudioSystem();
             initNoButton();
             renderQuiz();
             renderTimeline();
             startLoadingSequence();
             generateFloatingHearts();
-            document.body.addEventListener('click', startMusicSystem, { once: true });
-            document.body.addEventListener('touchstart', startMusicSystem, { once: true });
         });
 
         /* --- Loading Sequence --- */
@@ -773,7 +778,7 @@
                 screen.style.opacity = '0';
                 setTimeout(() => {
                     screen.classList.add('hidden-page');
-                    showPreProposal(); // Changed from revealing page-proposal directly
+                    showPreProposal(); 
                 }, 1000);
             }, 3200);
         }
@@ -787,37 +792,84 @@
             }, 3000); // Display for 3 seconds
         }
 
-        /* --- Audio System --- */
-        function initAudio() {
+        /* --- Improved Audio System (Aggressive Autoplay) --- */
+        function initAudioSystem() {
             const volumes = { song1: 0.3, song2: 0.8, song3: 0.3, song4: 0.3, song5: 0.5 };
             Object.keys(volumes).forEach(id => {
                 const el = document.getElementById(id);
                 if(el) el.volume = volumes[id];
             });
-            document.getElementById('song1').play().then(() => {
-                State.isMusicPlaying = true;
-                updateMusicWidget();
-            }).catch(() => console.log("Autoplay blocked"));
+
+            // 1. Try to play immediately on load
+            attemptToPlayMusic();
+
+            // 2. Setup a global listener that unlocks audio on ANY interaction
+            // This is the fallback for browsers that strictly block the initial play()
+            const unlockAudio = () => {
+                if (!State.isMusicPlaying) {
+                    attemptToPlayMusic();
+                }
+                // Once touched, we can likely play subsequent songs freely
+                // We leave the listener or remove it - keeping it is safer for "retry" logic
+            };
+            
+            // Listen to every possible user interaction
+            document.body.addEventListener('click', unlockAudio, { once: true });
+            document.body.addEventListener('touchstart', unlockAudio, { once: true });
+            document.body.addEventListener('keydown', unlockAudio, { once: true });
+            document.body.addEventListener('scroll', unlockAudio, { once: true });
+            document.body.addEventListener('mousemove', unlockAudio, { once: true });
         }
 
-        function startMusicSystem() {
+        function attemptToPlayMusic() {
             const audio = document.getElementById(State.currentSongId);
-            if (audio.paused) playSpecificSong(State.currentSongId);
+            if(!audio) return;
+
+            const playPromise = audio.play();
+
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    // Autoplay started!
+                    State.isMusicPlaying = true;
+                    updateMusicWidget();
+                    // Optional: remove interaction listeners if successful
+                }).catch(error => {
+                    // Autoplay was prevented.
+                    console.log("Autoplay prevented by browser. Waiting for interaction.");
+                    State.isMusicPlaying = false;
+                    updateMusicWidget();
+                });
+            }
         }
 
         function playSpecificSong(songId) {
+            // Stop all others
             ['song1', 'song2', 'song3', 'song4', 'song5'].forEach(id => {
                 const audio = document.getElementById(id);
                 if (id === songId) {
-                    audio.play().catch(e => console.log("Interaction needed"));
-                    State.isMusicPlaying = true;
+                    // Do nothing yet, we will play it
                 } else {
                     audio.pause();
                     audio.currentTime = 0;
                 }
             });
+
             State.currentSongId = songId;
-            updateMusicWidget();
+            const targetAudio = document.getElementById(songId);
+            
+            // Try playing
+            const playPromise = targetAudio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    State.isMusicPlaying = true;
+                    updateMusicWidget();
+                }).catch(e => {
+                    console.log("Interaction needed for song switch");
+                    State.isMusicPlaying = false;
+                    updateMusicWidget();
+                });
+            }
         }
 
         function toggleMusicState() {
@@ -825,16 +877,18 @@
             const icon = document.getElementById('music-toggle-icon');
             const btn = icon.parentElement;
             if (audio.paused) {
-                audio.play();
-                State.isMusicPlaying = true;
-                btn.innerHTML = '<i id="music-toggle-icon" data-lucide="pause" class="w-5 h-5"></i>';
+                audio.play().then(() => {
+                    State.isMusicPlaying = true;
+                    btn.innerHTML = '<i id="music-toggle-icon" data-lucide="pause" class="w-5 h-5"></i>';
+                    updateMusicWidget();
+                });
             } else {
                 audio.pause();
                 State.isMusicPlaying = false;
                 btn.innerHTML = '<i id="music-toggle-icon" data-lucide="play" class="w-5 h-5"></i>';
+                updateMusicWidget();
             }
             lucide.createIcons();
-            updateMusicWidget();
         }
 
         function updateMusicWidget() {
@@ -846,9 +900,21 @@
                 song5: "My Heart's Voice 💌"
             };
             document.getElementById('music-title').innerText = titles[State.currentSongId];
-            document.getElementById('music-status').innerText = State.isMusicPlaying ? "Playing..." : "Paused";
+            document.getElementById('music-status').innerText = State.isMusicPlaying ? "Playing..." : "Paused (Tap screen)";
             const bars = document.querySelectorAll('.music-bar');
             bars.forEach(bar => { bar.style.animationPlayState = State.isMusicPlaying ? 'running' : 'paused'; });
+            
+            // Update toggle icon based on actual state
+            const icon = document.getElementById('music-toggle-icon');
+            if(icon) {
+                 const btn = icon.parentElement;
+                 if(State.isMusicPlaying) {
+                     btn.innerHTML = '<i id="music-toggle-icon" data-lucide="pause" class="w-5 h-5"></i>';
+                 } else {
+                     btn.innerHTML = '<i id="music-toggle-icon" data-lucide="play" class="w-5 h-5"></i>';
+                 }
+                 lucide.createIcons();
+            }
         }
 
         /* --- Navigation & Transitions --- */
@@ -893,7 +959,7 @@
                         }, 500);
                     }, 800);
                 } else {
-                     // Fallback if overlay missing
+                      // Fallback if overlay missing
                     window.scrollTo(0, 0);
                     const allPages = document.querySelectorAll('[id^="page-"]');
                     allPages.forEach(page => page.classList.add('hidden-page'));
@@ -924,7 +990,7 @@
                         overlay.classList.remove('active');
                     }, 400);
                 } else {
-                     // Fallback
+                      // Fallback
                     window.scrollTo(0, 0);
                     const allPages = document.querySelectorAll('[id^="page-"]');
                     allPages.forEach(page => page.classList.add('hidden-page'));
@@ -1115,4 +1181,3 @@
     </script>
 </body>
 </html>
-
