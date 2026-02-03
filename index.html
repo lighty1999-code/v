@@ -47,6 +47,7 @@
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'wiggle': 'wiggle 1s ease-in-out infinite',
                         'spin-slow': 'spin 8s linear infinite',
+                        'fade-in-up': 'fadeInUp 1s ease-out forwards',
                     },
                     keyframes: {
                         float: {
@@ -56,6 +57,10 @@
                         wiggle: {
                             '0%, 100%': { transform: 'rotate(-3deg)' },
                             '50%': { transform: 'rotate(3deg)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
                         }
                     }
                 }
@@ -115,38 +120,36 @@
             }
         }
 
-        /* --- 1. Heart Transition Overlay (Special) --- */
         /* --- Iris Wipe Heart Transition Overlay --- */
-#transition-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    clip-path: circle(0% at 50% 50%);
-    background: radial-gradient(circle, #f43f5e 0%, #9f1239 100%);
-    transition: clip-path 0.8s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.5s ease-out;
-    opacity: 1;
-}
+        #iris-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            clip-path: circle(0% at 50% 50%);
+            background: radial-gradient(circle, #f43f5e 0%, #9f1239 100%);
+            transition: clip-path 0.8s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.5s ease-out;
+            opacity: 1;
+        }
 
-#transition-overlay.expanding {
-    pointer-events: all;
-    clip-path: circle(150% at 50% 50%);
-}
+        #iris-overlay.expanding {
+            pointer-events: all;
+            clip-path: circle(150% at 50% 50%);
+        }
 
-#transition-overlay.fading {
-    opacity: 0;
-    pointer-events: none;
-}
+        #iris-overlay.fading {
+            opacity: 0;
+            pointer-events: none;
+        }
 
-
-        /* --- 2. Formal Fade Transition Overlay (Standard) --- */
+        /* --- Formal Fade Transition Overlay --- */
         #fade-overlay {
             position: fixed;
             inset: 0;
-            background-color: #fff1f2; /* Match body bg */
+            background-color: #fff1f2;
             z-index: 9998;
             opacity: 0;
             pointer-events: none;
@@ -289,7 +292,6 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         }
 
-        
 
         /* --- Utilities --- */
         .hidden-page { display: none !important; }
@@ -371,17 +373,16 @@
         </div>
     </div>
 
-    <!-- HEART TRANSITION OVERLAY (For Proposal -> Celebration) -->
-  <!-- IRIS WIPE OVERLAY -->
-<div id="transition-overlay" class="hidden-page">
-  <div class="flex flex-col items-center text-white">
-    <i data-lucide="heart" class="w-20 h-20 animate-pulse fill-white"></i>
-    <p class="mt-4 font-hand text-2xl tracking-widest">...</p>
-  </div>
-</div>
+    <!-- IRIS WIPE OVERLAY -->
+    <div id="iris-overlay" class="hidden-page">
+        <div class="flex flex-col items-center text-white">
+            <i data-lucide="heart" class="w-20 h-20 animate-pulse fill-white"></i>
+            <p class="mt-4 font-hand text-2xl tracking-widest">...</p>
+        </div>
+    </div>
 
-<!-- NORMAL FADE OVERLAY -->
-<div id="fade-overlay"></div>
+    <!-- NORMAL FADE OVERLAY -->
+    <div id="fade-overlay"></div>
 
 
     <!-- GAME OVER SCREEN -->
@@ -392,7 +393,7 @@
                 <i data-lucide="heart-off" class="w-12 h-12 text-valentine-600 absolute bottom-0 right-0 animate-ping"></i>
             </div>
             <h1 class="text-5xl md:text-7xl font-black text-valentine-600 mb-4 tracking-widest uppercase glitch-effect" style="text-shadow: 2px 2px 0px #fff;">CHUP CHAP YES KAR</h1>
-            <p class="text-2xl md:text-3xl text-gray-300 font-bold tracking-wider mb-8 font-hand">nahi toh 🔪</p>
+            <p class="text-2xl md:text-3xl text-gray-300 font-bold tracking-wider mb-8 font-hand">nahi toh 🔪🔪🔪</p>
             <div id="game-over-btn-container" class="mt-8 hidden fade-in">
                 <button onclick="handleGameOverOk()" class="group relative px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full text-xl shadow-[0_0_20px_rgba(34,197,94,0.6)] transition-all transform hover:scale-110 active:scale-95">
                     <span class="flex items-center gap-2">
@@ -427,18 +428,23 @@
         </div>
     </div>
 
+    <!-- PAGE 0: PRE-PROPOSAL (New Page) -->
+    <div id="page-pre-proposal" class="hidden-page flex flex-col items-center justify-center min-h-screen relative z-10">
+        <div class="absolute inset-0 bg-gradient-to-b from-valentine-50 to-white opacity-80 z-0"></div>
+        <h1 class="relative z-10 text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-600 font-hand tracking-widest text-center p-6 animate-fade-in-up leading-relaxed drop-shadow-sm">
+            I HAVE A QUESTION<br>FOR YOU...
+        </h1>
+    </div>
+
     <!-- PAGE 1: PROPOSAL -->
-    <div id="page-proposal" class="flex flex-col items-center justify-center min-h-screen p-4 text-center overflow-hidden relative z-10">
+    <div id="page-proposal" class="hidden-page flex flex-col items-center justify-center min-h-screen p-4 text-center overflow-hidden relative z-10">
         <div class="absolute top-10 left-10 text-valentine-300 animate-float opacity-50"><i data-lucide="sparkles" class="w-12 h-12"></i></div>
         <div class="absolute bottom-20 right-10 text-valentine-300 animate-float-delayed opacity-50"><i data-lucide="flower-2" class="w-16 h-16"></i></div>
         <div class="glass-panel p-8 rounded-3xl shadow-2xl max-w-lg w-full transform transition-all hover:scale-[1.01]">
             <img src="https://media.tenor.com/gUiu1zyxfzYAAAAi/bear-kiss-bear-kisses.gif" alt="Cute Bear" class="w-48 h-48 mx-auto mb-6 object-cover rounded-2xl shadow-lg" />
-            <h1 class="text-4xl md:text-5xl font-bold text-valentine-600 mb-4 font-hand">Will you be mine? 🥺</h1>
-            <div class="min-h-[60px] flex items-center justify-center">
-                <p id="proposal-typing-text" class="text-gray-600 text-lg md:text-xl font-medium"></p>
-                <span class="w-0.5 h-6 bg-gray-500 animate-pulse ml-1"></span>
-            </div>
-            <div class="mt-10 flex flex-col md:flex-row items-center justify-center gap-6 h-32 relative">
+            <h1 class="text-4xl md:text-5xl font-bold text-valentine-600 mb-8 font-hand">Will you be mine? 🥺</h1>
+            
+            <div class="mt-4 flex flex-col md:flex-row items-center justify-center gap-6 h-32 relative">
                 <button onclick="handleYesClick()" id="yes-btn" class="bg-gradient-to-r from-valentine-500 to-pink-600 hover:from-valentine-600 hover:to-pink-700 text-white font-bold py-4 px-12 rounded-full shadow-lg shadow-valentine-500/40 transition-all duration-300 z-20 text-xl transform hover:-translate-y-1">Yes 💖</button>
                 <button id="no-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold py-4 px-12 rounded-full shadow-md cursor-not-allowed absolute md:static z-10">No</button>
             </div>
@@ -457,9 +463,7 @@
         <div class="relative z-10 max-w-2xl w-full">
             <div class="mb-8 relative inline-block">
                 <div class="absolute inset-0 bg-yellow-200 rounded-full filter blur-xl opacity-50 animate-pulse"></div>
-                <img src="cute2.gif" alt="My Image" class="w-72 h-72 rounded-2xl shadow-2xl object-cover relative z-10 transform hover:scale-105 transition-transform duration-500" />
-
-
+                <img src="cute2.gif" alt="Celebration Bear" class="w-72 h-72 rounded-2xl shadow-2xl object-cover relative z-10 transform hover:scale-105 transition-transform duration-500" />
             </div>
             <h1 class="text-5xl md:text-7xl font-bold text-valentine-600 mb-6 font-hand animate-bounce drop-shadow-sm">Hyyeee 🫠💖</h1>
             <div class="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl mb-8 mx-auto max-w-lg border border-white/50">
@@ -649,7 +653,7 @@
         </div>
     </div>
 
-    <!-- PAGE 6: LETTER (UPDATED) -->
+    <!-- PAGE 6: LETTER (FROM FIRST CODE) -->
 <div id="page-letter" class="hidden-page min-h-screen flex items-center justify-center p-4 relative z-10">
     <button onclick="navigateTo('page-dashboard')" class="absolute top-6 left-6 text-gray-400 hover:text-red-600 z-20">
         <i data-lucide="arrow-left" class="w-8 h-8"></i>
@@ -660,7 +664,7 @@
         <div class="envelope-container" onclick="toggleLetter()">
             <div class="envelope-back"></div>
             <div class="letter-card">
-                <img src="myletter.png" alt="My Love Letter" />
+               <img src="myletter.png" alt="My Love Letter" />
 
             </div>
             <div class="envelope-pocket"></div>
@@ -769,25 +773,18 @@
                 screen.style.opacity = '0';
                 setTimeout(() => {
                     screen.classList.add('hidden-page');
-                    typeWriterEffect();
+                    showPreProposal(); // Changed from revealing page-proposal directly
                 }, 1000);
             }, 3200);
         }
 
-        /* --- Typewriter Effect --- */
-        function typeWriterEffect() {
-            const text = "I have a question for you...";
-            const element = document.getElementById('proposal-typing-text');
-            let i = 0;
-            element.innerHTML = "";
-            function type() {
-                if (i < text.length) {
-                    element.innerHTML += text.charAt(i);
-                    i++;
-                    setTimeout(type, 100);
-                }
-            }
-            type();
+        function showPreProposal() {
+            const prePage = document.getElementById('page-pre-proposal');
+            prePage.classList.remove('hidden-page');
+            
+            setTimeout(() => {
+                navigateTo('page-proposal');
+            }, 3000); // Display for 3 seconds
         }
 
         /* --- Audio System --- */
@@ -855,62 +852,91 @@
         }
 
         /* --- Navigation & Transitions --- */
-        let currentPage = "page-proposal";
+        let currentPage = "page-pre-proposal"; // Start state logic
 
-function navigateTo(pageId) {
+        function navigateTo(pageId) {
+            if (pageId !== 'page-celebration') stopCelebrationHearts();
+            if (pageId === 'page-proposal') playSpecificSong('song1');
+            if (pageId === 'page-celebration') { 
+                playSpecificSong('song3'); 
+                startCelebrationHearts(); 
+            }
+            if (pageId === 'page-dashboard') { playSpecificSong('song4'); }
+            if (pageId === 'page-letter') { playSpecificSong('song5'); }
 
-    // music logic (keep yours)
-    if (pageId !== 'page-celebration') stopCelebrationHearts();
-    if (pageId === 'page-proposal') playSpecificSong('song1');
-    if (pageId === 'page-celebration') { 
-        playSpecificSong('song3'); 
-        startCelebrationHearts(); 
-    }
-    if (pageId === 'page-dashboard') playSpecificSong('song4');
-    if (pageId === 'page-letter') playSpecificSong('song5');
+            // Use Heart Transition ONLY for Proposal -> Celebration
+            if (pageId === 'page-celebration') {
+                const overlay = document.getElementById('iris-overlay');
+                if (overlay) {
+                    overlay.classList.remove('hidden-page');
+                    
+                    requestAnimationFrame(() => {
+                        overlay.classList.add('expanding');
+                    });
 
-    // 👉 ONLY Proposal → Celebration uses iris wipe
-    if (currentPage === "page-proposal" && pageId === "page-celebration") {
+                    setTimeout(() => {
+                        window.scrollTo(0, 0);
+                        const allPages = document.querySelectorAll('[id^="page-"]');
+                        allPages.forEach(page => page.classList.add('hidden-page'));
+                        const target = document.getElementById(pageId);
+                        if (target) {
+                             target.classList.remove('hidden-page');
+                             lucide.createIcons();
+                        }
+                        
+                        // Fade out
+                        overlay.classList.add('fading');
+                        
+                        setTimeout(() => {
+                            overlay.classList.remove('expanding', 'fading');
+                            overlay.classList.add('hidden-page');
+                        }, 500);
+                    }, 800);
+                } else {
+                     // Fallback if overlay missing
+                    window.scrollTo(0, 0);
+                    const allPages = document.querySelectorAll('[id^="page-"]');
+                    allPages.forEach(page => page.classList.add('hidden-page'));
+                    const target = document.getElementById(pageId);
+                    if (target) {
+                        target.classList.remove('hidden-page');
+                        lucide.createIcons();
+                    }
+                }
 
-        const overlay = document.getElementById('transition-overlay');
-        overlay.classList.remove('hidden-page');
+            } else {
+                // Formal Fade for everything else
+                const overlay = document.getElementById('fade-overlay');
+                if (overlay) {
+                    overlay.classList.add('active');
 
-        requestAnimationFrame(() => {
-            overlay.classList.add('expanding');
-        });
-
-        setTimeout(() => {
-            window.scrollTo(0, 0);
-            document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden-page'));
-            document.getElementById(pageId).classList.remove('hidden-page');
-            lucide.createIcons();
-
-            overlay.classList.add('fading');
-
-            setTimeout(() => {
-                overlay.classList.remove('expanding', 'fading');
-                overlay.classList.add('hidden-page');
-            }, 500);
-
-        }, 800);
-
-    } else {
-        // 👉 normal fade for all other pages
-        const fade = document.getElementById('fade-overlay');
-        fade.classList.add('active');
-
-        setTimeout(() => {
-            window.scrollTo(0, 0);
-            document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden-page'));
-            document.getElementById(pageId).classList.remove('hidden-page');
-            lucide.createIcons();
-            fade.classList.remove('active');
-        }, 400);
-    }
-
-    currentPage = pageId;
-}
-
+                    setTimeout(() => {
+                        window.scrollTo(0, 0);
+                        const allPages = document.querySelectorAll('[id^="page-"]');
+                        allPages.forEach(page => page.classList.add('hidden-page'));
+                        const target = document.getElementById(pageId);
+                        if(target) {
+                            target.classList.remove('hidden-page');
+                            lucide.createIcons();
+                        }
+                        
+                        // Fade out
+                        overlay.classList.remove('active');
+                    }, 400);
+                } else {
+                     // Fallback
+                    window.scrollTo(0, 0);
+                    const allPages = document.querySelectorAll('[id^="page-"]');
+                    allPages.forEach(page => page.classList.add('hidden-page'));
+                    const target = document.getElementById(pageId);
+                    if (target) {
+                        target.classList.remove('hidden-page');
+                        lucide.createIcons();
+                    }
+                }
+            }
+            currentPage = pageId;
+        }
 
         /* --- Proposal Logic --- */
         function initNoButton() {
@@ -1028,10 +1054,11 @@ function navigateTo(pageId) {
         }
 
         /* --- Feature: Letter --- */
-       function toggleLetter() {
-        const envelope = document.querySelector('.envelope-container');
-        envelope.classList.toggle('open');
+        function toggleLetter() {
+    const envelope = document.querySelector('.envelope-container');
+    envelope.classList.toggle('open');
 }
+
 
         /* --- Visuals: Transparent Floating Hearts (Boing Effect) --- */
         function generateFloatingHearts() {
@@ -1087,5 +1114,4 @@ function navigateTo(pageId) {
         }
     </script>
 </body>
-
 </html>
